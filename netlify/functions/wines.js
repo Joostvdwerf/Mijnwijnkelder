@@ -1,5 +1,3 @@
-// netlify/functions/wines.js
-
 const { getStore } = require("@netlify/blobs");
 
 const STORE_NAME = "wijnkelder";
@@ -28,7 +26,6 @@ function err(msg, statusCode = 400) {
 }
 
 module.exports.handler = async (event) => {
-  // CORS preflight
   if (event.httpMethod === "OPTIONS") {
     return {
       statusCode: 204,
@@ -39,12 +36,10 @@ module.exports.handler = async (event) => {
 
   const store = getStore(STORE_NAME);
 
-  // URL parsing
   const path = event.path.replace(/^\/.netlify\/functions\/wines\/?/, "");
   const parts = path.split("/").filter(Boolean);
   const wijnId = parts[0] || null;
 
-  // GET — alle wijnen
   if (event.httpMethod === "GET" && !wijnId) {
     try {
       const { blobs } = await store.list();
@@ -59,14 +54,12 @@ module.exports.handler = async (event) => {
         })
       );
 
-      const valid = wines.filter(Boolean).sort((a, b) => a.id - b.id);
-      return ok(valid);
+      return ok(wines.filter(Boolean).sort((a, b) => a.id - b.id));
     } catch (e) {
       return err("Laden mislukt: " + e.message, 500);
     }
   }
 
-  // POST — nieuwe wijn
   if (event.httpMethod === "POST" && !wijnId) {
     try {
       const data = JSON.parse(event.body || "{}");
@@ -80,7 +73,6 @@ module.exports.handler = async (event) => {
     }
   }
 
-  // PUT — update wijn
   if (event.httpMethod === "PUT" && wijnId) {
     try {
       const raw = await store.get(wijnId);
@@ -97,73 +89,6 @@ module.exports.handler = async (event) => {
     }
   }
 
-  // DELETE — verwijder wijn
-  if (event.httpMethod === "DELETE" && wijnId) {
-    try {
-      await store.delete(wijnId);
-      return ok({ deleted: true });
-    } catch (e) {
-      return err("Verwijderen mislukt: " + e.message, 500);
-    }
-  }
-
-  return err("Niet gevonden", 404);
-};  }
-
-  // PUT /api/wines/:id — wijn bijwerken
-  if (req.method === "PUT" && wijnId) {
-    try {
-      const raw = await store.get(wijnId);
-      if (!raw) return err("Wijn niet gevonden", 404);
-      const existing = JSON.parse(raw);
-      const changes = await req.json();
-      const updated = { ...existing, ...changes, id: existing.id };
-      await store.set(wijnId, JSON.stringify(updated));
-      return ok(updated);
-    } catch (e) {
-      return err("Bijwerken mislukt: " + e.message, 500);
-    }
-  }
-
-  // DELETE /api/wines/:id — wijn verwijderen
-  if (req.method === "DELETE" && wijnId) {
-    try {
-      await store.delete(wijnId);
-      return ok({ deleted: true });
-    } catch (e) {
-      return err("Verwijderen mislukt: " + e.message, 500);
-    }
-  }
-
-  return err("Niet gevonden", 404);
-};
-
-// v2: geef aan welk URL-pad deze function afhandelt
-export const config = {
-  path: ["/api/wines", "/api/wines/*"],
-};      await store.set(String(id), JSON.stringify(wijn));
-      return ok({ id }, 201);
-    } catch (e) {
-      return err("Opslaan mislukt: " + e.message, 500);
-    }
-  }
-
-  // ── PUT /api/wines/:id  →  wijn bijwerken ─────────────────────────────
-  if (event.httpMethod === "PUT" && wijnId) {
-    try {
-      const raw = await store.get(wijnId);
-      if (!raw) return err("Wijn niet gevonden", 404);
-      const existing = JSON.parse(raw);
-      const changes = JSON.parse(event.body || "{}");
-      const updated = { ...existing, ...changes, id: existing.id };
-      await store.set(wijnId, JSON.stringify(updated));
-      return ok(updated);
-    } catch (e) {
-      return err("Bijwerken mislukt: " + e.message, 500);
-    }
-  }
-
-  // ── DELETE /api/wines/:id  →  wijn verwijderen ────────────────────────
   if (event.httpMethod === "DELETE" && wijnId) {
     try {
       await store.delete(wijnId);
