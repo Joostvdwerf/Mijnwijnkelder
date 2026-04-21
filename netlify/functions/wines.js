@@ -34,12 +34,17 @@ module.exports.handler = async (event) => {
     };
   }
 
-  const store = getStore(STORE_NAME);
+  // 🔥 HIER zit de fix
+  const store = getStore({
+    name: STORE_NAME,
+    consistency: "strong",
+  });
 
   const path = event.path.replace(/^\/.netlify\/functions\/wines\/?/, "");
   const parts = path.split("/").filter(Boolean);
   const wijnId = parts[0] || null;
 
+  // GET
   if (event.httpMethod === "GET" && !wijnId) {
     try {
       const { blobs } = await store.list();
@@ -60,6 +65,7 @@ module.exports.handler = async (event) => {
     }
   }
 
+  // POST
   if (event.httpMethod === "POST" && !wijnId) {
     try {
       const data = JSON.parse(event.body || "{}");
@@ -73,6 +79,7 @@ module.exports.handler = async (event) => {
     }
   }
 
+  // PUT
   if (event.httpMethod === "PUT" && wijnId) {
     try {
       const raw = await store.get(wijnId);
@@ -89,6 +96,7 @@ module.exports.handler = async (event) => {
     }
   }
 
+  // DELETE
   if (event.httpMethod === "DELETE" && wijnId) {
     try {
       await store.delete(wijnId);
