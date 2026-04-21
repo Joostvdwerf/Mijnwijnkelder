@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wijn – Mijn Wijnkelder</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,500;1,300&display=swap" rel="stylesheet" />
+  <style>
+    /* FIX: foto scrollt mee — geen sticky meer */
+    .wijn-photo-col {
+      position: relative !important;
+      top: auto !important;
+    }
+  </style>
+</head>
+<body class="wijn-page">
+
+  <div class="bg-texture"></div>
+
+  <header class="wijn-header">
+    <a href="kelder.html" class="back-btn">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+      Terug naar Kelder
+    </a>
+    <div class="wijn-header-actions" id="headerActions" style="display:none">
+      <button class="btn-icon btn-edit"   id="editBtn"   title="Bewerken">✏️</button>
+      <button class="btn-icon btn-delete" id="deleteBtn" title="Verwijderen">🗑️</button>
+    </div>
+  </header>
+
+  <main class="wijn-main" id="wijnMain">
+    <div style="text-align:center;padding:120px 0;color:#6e5e52">
+      <div style="font-size:48px">🍷</div>
+      <p>Wijn laden…</p>
+    </div>
+  </main>
+
+  <!-- Edit Modal -->
+  <div class="modal-overlay" id="editOverlay">
+    <div class="modal modal-wide" id="editModal">
+      <button class="modal-close" id="editClose">✕</button>
+      <h2 class="modal-title">Wijn Bewerken</h2>
+      <div class="edit-form" id="editForm">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Naam</label>
+            <input type="text" id="edit-naam" placeholder="Bijv. Château Margaux" />
+          </div>
+          <div class="form-group">
+            <label>Jaar</label>
+            <input type="number" id="edit-jaar" placeholder="2019" min="1900" max="2099" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Type</label>
+            <select id="edit-type">
+              <option value="">— Selecteer —</option>
+              <option value="Rood">Rood</option>
+              <option value="Wit">Wit</option>
+              <option value="Rosé">Rosé</option>
+              <option value="Mousseux">Mousseux</option>
+              <option value="Dessert">Dessert</option>
+              <option value="Oranje">Oranje</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Druivensoort(en)</label>
+            <input type="text" id="edit-druif" placeholder="Bijv. Merlot, Cabernet" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Regio / Appellation</label>
+            <input type="text" id="edit-regio" placeholder="Bijv. Bordeaux" />
+          </div>
+          <div class="form-group">
+            <label>Land</label>
+            <input type="text" id="edit-land" placeholder="Bijv. Frankrijk" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Prijs (€)</label>
+            <input type="number" id="edit-prijs" placeholder="14.99" step="0.01" min="0" />
+          </div>
+          <div class="form-group">
+            <label>Alcohol %</label>
+            <input type="number" id="edit-alcohol" placeholder="13.5" step="0.1" min="0" max="25" />
+          </div>
+        </div>
+        <div class="form-group full-width">
+          <label>Waar te kopen</label>
+          <input type="text" id="edit-winkel" placeholder="Bijv. Albert Heijn, Gall & Gall, online link..." />
+        </div>
+        <div class="form-group full-width">
+          <label>Smaaknotities</label>
+          <textarea id="edit-notities" rows="3" placeholder="Tannines, zuren, aroma's, nasmaak..."></textarea>
+        </div>
+        <div class="form-group full-width">
+          <label>Jouw persoonlijke notities</label>
+          <textarea id="edit-eigen" rows="2" placeholder="Gedronken bij, met wie, bijzondere gelegenheid..."></textarea>
+        </div>
+
+        <div class="form-rating-section">
+          <label>Rating</label>
+          <div class="rating-selector" id="editRating">
+            <span class="rating-grape" data-value="1"></span>
+            <span class="rating-grape" data-value="2"></span>
+            <span class="rating-grape" data-value="3"></span>
+            <span class="rating-grape" data-value="4"></span>
+            <span class="rating-grape" data-value="5"></span>
+          </div>
+          <input type="hidden" id="edit-rating" value="0" />
+        </div>
+
+        <div class="form-group full-width">
+          <label class="checkbox-label">
+            <input type="checkbox" id="edit-keepAgain" />
+            <span class="checkbox-custom"></span>
+            <span>Nog een keer kopen / aanrader</span>
+          </label>
+        </div>
+
+        <button class="btn-save" id="saveBtn">Opslaan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete confirm -->
+  <div class="modal-overlay" id="deleteOverlay">
+    <div class="modal modal-sm">
+      <h2 class="modal-title">Wijn verwijderen?</h2>
+      <p class="modal-sub">Dit kan niet ongedaan worden gemaakt.</p>
+      <div class="confirm-actions">
+        <button class="btn-cancel" id="deleteCancelBtn">Annuleren</button>
+        <button class="btn-danger" id="deleteConfirmBtn">Verwijderen</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    const params = new URLSearchParams(location.search);
+    const id     = parseInt(params.get('id'));
+    const isNew  = params.get('new') === '1';
+
+    let wijn = null;
+
+    // Laad wijn van server
+    WijnKelder.getById(id).then(w => {
+      if (!w) { location.href = 'kelder.html'; return; }
+      wijn = w;
+      document.title = `${wijn.naam || 'Wijn'} – Mijn Wijnkelder`;
+      document.getElementById('headerActions').style.display = 'flex';
+      renderPage();
+    }).catch(() => {
+      document.getElementById('wijnMain').innerHTML = '<div style="text-align:center;padding:80px 0"><p>⚠️ Laden mislukt</p></div>';
+    });
+
+    function renderPage() {
+      const main      = document.getElementById('wijnMain');
+      const typeClass = (wijn.type||'').toLowerCase().replace('é','e') || 'rood';
+
+      main.innerHTML = `
+        <div class="wijn-layout">
+          <!-- Links: foto -->
+          <div class="wijn-photo-col">
+            <div class="wijn-photo-wrap">
+              ${wijn.photo
+                ? `<img src="${wijn.photo}" alt="${wijn.naam}" class="wijn-photo" />`
+                : `<div style="width:100%;aspect-ratio:3/4;background:rgba(123,21,52,0.25);display:flex;align-items:center;justify-content:center;font-size:80px;border-radius:var(--radius)">🍷</div>`}
+              <div class="wijn-type-ribbon type-${typeClass}">${wijn.type || '?'}</div>
+            </div>
+            ${wijn.keepAgain ? `<div class="keep-badge-large">⭐ Aanrader – Nog een keer kopen!</div>` : ''}
+          </div>
+
+          <!-- Rechts: info -->
+          <div class="wijn-info-col">
+            ${isNew ? '<div class="new-badge animate-pop">✨ Nieuw toegevoegd!</div>' : ''}
+            <div class="wijn-naam">${wijn.naam || 'Onbekende Wijn'}</div>
+            <div class="wijn-meta-row">
+              ${wijn.jaar  ? `<span class="meta-pill">${wijn.jaar}</span>` : ''}
+              ${wijn.land  ? `<span class="meta-pill">${wijn.land}</span>` : ''}
+              ${wijn.regio ? `<span class="meta-pill">${wijn.regio}</span>` : ''}
+              ${wijn.druif ? `<span class="meta-pill meta-grape">🍇 ${wijn.druif}</span>` : ''}
+              ${wijn.alcohol ? `<span class="meta-pill">${wijn.alcohol}% alc.</span>` : ''}
+            </div>
+
+            <!-- Rating — interactief -->
+            <div class="wijn-rating-section">
+              <div class="rating-label">Jouw beoordeling</div>
+              <div class="rating-interactive" id="ratingInteractive">
+                ${[1,2,3,4,5].map(n =>
+                  `<span class="grape-rate ${n <= (wijn.rating||0) ? 'filled' : ''}" data-value="${n}">
+                    ${n <= (wijn.rating||0) ? GrapeSprite.filled : GrapeSprite.empty}
+                  </span>`
+                ).join('')}
+              </div>
+              <div class="rating-text" id="ratingText">${['Niet beoordeeld','Teleurstellend','Matig','Goed','Uitstekend','Buitengewoon!'][wijn.rating||0]}</div>
+            </div>
+
+            <!-- Keep again -->
+            <label class="keep-toggle" id="keepToggle">
+              <input type="checkbox" id="keepCheck" ${wijn.keepAgain ? 'checked' : ''} />
+              <span class="keep-track"></span>
+              <span class="keep-label">${wijn.keepAgain ? '⭐ Aanrader – Nog een keer kopen!' : 'Nog een keer kopen?'}</span>
+            </label>
+
+            <!-- Prijs & winkel -->
+            <div class="info-grid">
+              <div class="info-block">
+                <div class="info-block-label">Prijs</div>
+                <div class="info-block-value">${wijn.prijs ? `€${parseFloat(wijn.prijs).toFixed(2)}` : '–'}</div>
+              </div>
+              <div class="info-block">
+                <div class="info-block-label">Waar te koop</div>
+                <div class="info-block-value">${wijn.winkel || '–'}</div>
+              </div>
+            </div>
+
+            ${wijn.notities ? `
+            <div class="wijn-section">
+              <div class="section-label">🍷 Smaakprofiel</div>
+              <p class="section-text">${wijn.notities}</p>
+            </div>` : ''}
+
+            ${wijn.eigen ? `
+            <div class="wijn-section">
+              <div class="section-label">📝 Persoonlijke Notities</div>
+              <p class="section-text">${wijn.eigen}</p>
+            </div>` : ''}
+
+            <div class="wijn-added">Toegevoegd op ${new Date(wijn.id).toLocaleDateString('nl-NL', {day:'numeric', month:'long', year:'numeric'})}</div>
+          </div>
+        </div>`;
+
+      // Interactieve rating op de detailpagina
+      let currentDetailRating = wijn.rating || 0;
+      document.querySelectorAll('.grape-rate').forEach(grape => {
+        const val = parseInt(grape.dataset.value);
+        grape.onmouseenter = () => {
+          document.querySelectorAll('.grape-rate').forEach((g, i) => {
+            g.innerHTML = i < val ? GrapeSprite.filled : GrapeSprite.empty;
+            g.classList.toggle('hover', i < val);
+          });
+        };
+        grape.onmouseleave = () => {
+          document.querySelectorAll('.grape-rate').forEach((g, i) => {
+            g.innerHTML = i < currentDetailRating ? GrapeSprite.filled : GrapeSprite.empty;
+            g.classList.remove('hover');
+          });
+        };
+        grape.onclick = async () => {
+          currentDetailRating = val;
+          wijn.rating = val;
+          await WijnKelder.update(id, { rating: val });
+          document.getElementById('ratingText').textContent = ['Niet beoordeeld','Teleurstellend','Matig','Goed','Uitstekend','Buitengewoon!'][val];
+          renderPage();
+        };
+      });
+
+      // Keep again toggle
+      document.getElementById('keepCheck').onchange = async (e) => {
+        wijn.keepAgain = e.target.checked;
+        await WijnKelder.update(id, { keepAgain: e.target.checked });
+        renderPage();
+      };
+    }
+
+    // ---- Edit modal ----
+    const editOverlay = document.getElementById('editOverlay');
+
+    document.getElementById('editBtn').onclick = () => {
+      document.getElementById('edit-naam').value    = wijn.naam    || '';
+      document.getElementById('edit-jaar').value    = wijn.jaar    || '';
+      document.getElementById('edit-type').value    = wijn.type    || '';
+      document.getElementById('edit-druif').value   = wijn.druif   || '';
+      document.getElementById('edit-regio').value   = wijn.regio   || '';
+      document.getElementById('edit-land').value    = wijn.land    || '';
+      document.getElementById('edit-prijs').value   = wijn.prijs   || '';
+      document.getElementById('edit-alcohol').value = wijn.alcohol || '';
+      document.getElementById('edit-winkel').value  = wijn.winkel  || '';
+      document.getElementById('edit-notities').value = wijn.notities || '';
+      document.getElementById('edit-eigen').value   = wijn.eigen   || '';
+      document.getElementById('edit-rating').value  = wijn.rating  || 0;
+      document.getElementById('edit-keepAgain').checked = wijn.keepAgain || false;
+      // Rating grapes initialiseren nadat modal waarden gezet zijn
+      initRatingSelector('editRating', 'edit-rating');
+      editOverlay.classList.add('active');
+    };
+
+    document.getElementById('editClose').onclick = () => editOverlay.classList.remove('active');
+    editOverlay.onclick = (e) => { if (e.target === editOverlay) editOverlay.classList.remove('active'); };
+
+    document.getElementById('saveBtn').onclick = async () => {
+      const btn = document.getElementById('saveBtn');
+      btn.disabled = true;
+      btn.textContent = 'Opslaan…';
+      try {
+        await WijnKelder.update(id, {
+          naam:      document.getElementById('edit-naam').value,
+          jaar:      document.getElementById('edit-jaar').value,
+          type:      document.getElementById('edit-type').value,
+          druif:     document.getElementById('edit-druif').value,
+          regio:     document.getElementById('edit-regio').value,
+          land:      document.getElementById('edit-land').value,
+          prijs:     document.getElementById('edit-prijs').value,
+          alcohol:   document.getElementById('edit-alcohol').value,
+          winkel:    document.getElementById('edit-winkel').value,
+          notities:  document.getElementById('edit-notities').value,
+          eigen:     document.getElementById('edit-eigen').value,
+          rating:    parseInt(document.getElementById('edit-rating').value) || 0,
+          keepAgain: document.getElementById('edit-keepAgain').checked,
+        });
+        wijn = await WijnKelder.getById(id);
+        editOverlay.classList.remove('active');
+        renderPage();
+      } catch (err) {
+        alert('Opslaan mislukt: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Opslaan';
+      }
+    };
+
+    // ---- Delete ----
+    const deleteOverlay = document.getElementById('deleteOverlay');
+    document.getElementById('deleteBtn').onclick       = () => deleteOverlay.classList.add('active');
+    document.getElementById('deleteCancelBtn').onclick = () => deleteOverlay.classList.remove('active');
+    document.getElementById('deleteConfirmBtn').onclick = async () => {
+      await WijnKelder.delete(id);
+      location.href = 'kelder.html';
+    };
+  </script>
+</body>
+</html>

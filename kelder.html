@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mijn Wijnkelder – Collectie</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,500;1,300&display=swap" rel="stylesheet" />
+</head>
+<body class="kelder-page">
+
+  <div class="bg-texture"></div>
+
+  <header class="kelder-header">
+    <div class="header-inner">
+      <a href="index.html" class="header-logo">
+        <span>🍷</span>
+        <span class="logo-text">Mijn Wijnkelder</span>
+      </a>
+      <div class="header-actions">
+        <div class="search-wrap">
+          <input type="text" id="searchInput" placeholder="Zoek wijn, jaar, regio…" class="search-input" />
+          <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        </div>
+        <button class="btn-add" id="addBtn">+ Toevoegen</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="filter-bar">
+    <div class="filter-inner">
+      <div class="filter-group">
+        <span class="filter-label">Type:</span>
+        <button class="filter-chip active" data-filter="type" data-value="">Alle</button>
+        <button class="filter-chip" data-filter="type" data-value="Rood">Rood</button>
+        <button class="filter-chip" data-filter="type" data-value="Wit">Wit</button>
+        <button class="filter-chip" data-filter="type" data-value="Rosé">Rosé</button>
+        <button class="filter-chip" data-filter="type" data-value="Mousseux">Mousseux</button>
+        <button class="filter-chip" data-filter="type" data-value="Dessert">Dessert</button>
+      </div>
+      <div class="filter-group">
+        <span class="filter-label">Sorteren:</span>
+        <select class="filter-select" id="sortSelect">
+          <option value="newest">Nieuwste eerst</option>
+          <option value="oldest">Oudste eerst</option>
+          <option value="rating-high">Hoogste rating</option>
+          <option value="rating-low">Laagste rating</option>
+          <option value="name">Naam A–Z</option>
+          <option value="price-low">Prijs laag–hoog</option>
+          <option value="price-high">Prijs hoog–laag</option>
+        </select>
+      </div>
+      <label class="filter-toggle">
+        <input type="checkbox" id="keepFilter" />
+        <span class="toggle-track"></span>
+        <span>Alleen aanraders</span>
+      </label>
+    </div>
+  </div>
+
+  <main class="kelder-main">
+    <div class="empty-state" id="loadingState">
+      <div class="empty-icon">🍷</div>
+      <h2>Kelder laden…</h2>
+    </div>
+    <div class="empty-state" id="emptyState" style="display:none">
+      <div class="empty-icon">🍾</div>
+      <h2>De kelder is nog leeg</h2>
+      <p>Voeg je eerste wijn toe via de knop rechtsboven</p>
+    </div>
+    <div class="empty-state" id="noResultsState" style="display:none">
+      <div class="empty-icon">🔍</div>
+      <h2>Geen wijnen gevonden</h2>
+      <p>Probeer andere zoekterm of filter</p>
+    </div>
+    <div class="wine-grid" id="wineGrid"></div>
+  </main>
+
+  <!-- Add Wine Modal -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal modal-wide">
+      <button class="modal-close" id="modalClose">✕</button>
+
+      <div id="step1">
+        <h2 class="modal-title">Nieuwe Wijn Toevoegen</h2>
+        <p class="modal-sub">Stap 1 van 2 — Foto van de fles (optioneel)</p>
+        <div class="upload-zone" id="uploadZone">
+          <input type="file" id="photoInput" accept="image/*" capture="environment" />
+          <div class="upload-icon">📷</div>
+          <p class="upload-text">Klik of sleep een foto hier</p>
+          <p class="upload-hint">JPG, PNG, WEBP — of sla over en vul direct de details in</p>
+        </div>
+        <div class="upload-preview" id="uploadPreview" style="display:none">
+          <img id="previewImg" src="" alt="Preview" />
+          <button class="btn-change" id="changePhoto">Andere foto</button>
+        </div>
+        <div class="step-actions">
+          <button class="btn-skip" id="skipPhotoBtn">Overslaan, direct naar details →</button>
+          <button class="btn-next" id="nextStepBtn" disabled>Volgende →</button>
+        </div>
+      </div>
+
+      <div id="step2" style="display:none">
+        <h2 class="modal-title">Wijn Details</h2>
+        <p class="modal-sub">Stap 2 van 2 — Vul in wat je weet, de rest kun je altijd later aanpassen</p>
+        <div class="edit-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Naam <span class="required">*</span></label>
+              <input type="text" id="add-naam" placeholder="Bijv. Château Margaux" />
+            </div>
+            <div class="form-group">
+              <label>Jaar</label>
+              <input type="number" id="add-jaar" placeholder="2019" min="1900" max="2099" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Type</label>
+              <select id="add-type">
+                <option value="">— Selecteer —</option>
+                <option value="Rood">Rood</option>
+                <option value="Wit">Wit</option>
+                <option value="Rosé">Rosé</option>
+                <option value="Mousseux">Mousseux</option>
+                <option value="Dessert">Dessert</option>
+                <option value="Oranje">Oranje</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Druivensoort(en)</label>
+              <input type="text" id="add-druif" placeholder="Bijv. Merlot, Cabernet" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Regio / Appellation</label>
+              <input type="text" id="add-regio" placeholder="Bijv. Bordeaux" />
+            </div>
+            <div class="form-group">
+              <label>Land</label>
+              <input type="text" id="add-land" placeholder="Bijv. Frankrijk" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Prijs (€)</label>
+              <input type="number" id="add-prijs" placeholder="14.99" step="0.01" min="0" />
+            </div>
+            <div class="form-group">
+              <label>Alcohol %</label>
+              <input type="number" id="add-alcohol" placeholder="13.5" step="0.1" min="0" max="25" />
+            </div>
+          </div>
+          <div class="form-group full-width">
+            <label>Waar te kopen</label>
+            <input type="text" id="add-winkel" placeholder="Bijv. Albert Heijn, Gall & Gall, website..." />
+          </div>
+          <div class="form-group full-width">
+            <label>Smaaknotities</label>
+            <textarea id="add-notities" rows="2" placeholder="Tannines, zuren, aroma's, nasmaak..."></textarea>
+          </div>
+          <div class="form-group full-width">
+            <label>Persoonlijke notities</label>
+            <textarea id="add-eigen" rows="2" placeholder="Gedronken bij, met wie, bijzondere gelegenheid..."></textarea>
+          </div>
+
+          <div class="form-rating-section">
+            <label>Rating</label>
+            <div class="rating-selector" id="addRating">
+              <span class="rating-grape" data-value="1"></span>
+              <span class="rating-grape" data-value="2"></span>
+              <span class="rating-grape" data-value="3"></span>
+              <span class="rating-grape" data-value="4"></span>
+              <span class="rating-grape" data-value="5"></span>
+            </div>
+            <input type="hidden" id="add-rating" value="0" />
+          </div>
+
+          <div class="form-group full-width">
+            <label class="checkbox-label">
+              <input type="checkbox" id="add-keepAgain" />
+              <span class="checkbox-custom"></span>
+              <span>Nog een keer kopen / aanrader</span>
+            </label>
+          </div>
+
+          <div class="step-actions">
+            <button class="btn-back" id="backStepBtn">← Terug</button>
+            <button class="btn-save" id="saveNewBtn">Opslaan in kelder 🍷</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    // ---- State ----
+    let allWines = [];
+    let activeFilters = { type: '', search: '', keepAgain: false };
+    let sortMode = 'newest';
+
+    // ---- Laden ----
+    WijnKelder.getAll().then(wines => {
+      allWines = wines;
+      document.getElementById('loadingState').style.display = 'none';
+      renderGrid();
+    }).catch(() => {
+      document.getElementById('loadingState').innerHTML = '<div class="empty-icon">⚠️</div><h2>Laden mislukt</h2><p>Controleer je verbinding</p>';
+    });
+
+    function renderGrid() {
+      let wines = allWines.slice();
+      if (activeFilters.type)     wines = wines.filter(w => w.type === activeFilters.type);
+      if (activeFilters.keepAgain) wines = wines.filter(w => w.keepAgain);
+      if (activeFilters.search) {
+        const q = activeFilters.search.toLowerCase();
+        wines = wines.filter(w =>
+          (w.naam||'').toLowerCase().includes(q) ||
+          (w.regio||'').toLowerCase().includes(q) ||
+          String(w.jaar||'').includes(q) ||
+          (w.druif||'').toLowerCase().includes(q) ||
+          (w.land||'').toLowerCase().includes(q)
+        );
+      }
+      wines.sort((a,b) => {
+        if (sortMode==='newest')     return b.id - a.id;
+        if (sortMode==='oldest')     return a.id - b.id;
+        if (sortMode==='rating-high') return (b.rating||0) - (a.rating||0);
+        if (sortMode==='rating-low')  return (a.rating||0) - (b.rating||0);
+        if (sortMode==='name')        return (a.naam||'').localeCompare(b.naam||'');
+        if (sortMode==='price-low')   return parseFloat(a.prijs||999) - parseFloat(b.prijs||999);
+        if (sortMode==='price-high')  return parseFloat(b.prijs||0)   - parseFloat(a.prijs||0);
+        return 0;
+      });
+
+      const grid = document.getElementById('wineGrid');
+      grid.innerHTML = '';
+
+      if (!allWines.length) {
+        document.getElementById('emptyState').style.display = 'flex';
+        document.getElementById('noResultsState').style.display = 'none';
+        return;
+      }
+      document.getElementById('emptyState').style.display = 'none';
+      if (!wines.length) {
+        document.getElementById('noResultsState').style.display = 'flex';
+        return;
+      }
+      document.getElementById('noResultsState').style.display = 'none';
+
+      wines.forEach((w, i) => {
+        const card = document.createElement('a');
+        card.href = `wijn.html?id=${w.id}`;
+        card.className = 'wine-card';
+        card.style.animationDelay = `${i * 0.05}s`;
+        const typeClass = (w.type||'').toLowerCase().replace('é','e') || 'rood';
+        const ratingHtml = [1,2,3,4,5].map(n =>
+          `<span class="grape-icon">${n<=(w.rating||0) ? GrapeSprite.filled : GrapeSprite.empty}</span>`
+        ).join('');
+        const photoStyle = w.photo ? `background-image:url('${w.photo}')` : 'background-color:var(--dark-mid)';
+        card.innerHTML = `
+          <div class="card-photo" style="${photoStyle}">
+            ${!w.photo ? `<div class="card-no-photo">🍷</div>` : ''}
+            <div class="card-type-badge type-${typeClass}">${w.type||'?'}</div>
+            ${w.keepAgain ? '<div class="card-keep-badge">⭐ Aanrader</div>' : ''}
+          </div>
+          <div class="card-body">
+            <div class="card-name">${w.naam||'Onbekende Wijn'}</div>
+            <div class="card-meta">
+              ${w.jaar  ? `<span>${w.jaar}</span>`  : ''}
+              ${w.regio ? `<span>${w.regio}</span>` : ''}
+              ${w.land  ? `<span>${w.land}</span>`  : ''}
+            </div>
+            <div class="card-druif">${w.druif||''}</div>
+            <div class="card-footer">
+              <div class="card-rating">${ratingHtml}</div>
+              ${w.prijs ? `<div class="card-price">€${parseFloat(w.prijs).toFixed(2)}</div>` : ''}
+            </div>
+          </div>`;
+        grid.appendChild(card);
+      });
+    }
+
+    // Filters
+    document.querySelectorAll('.filter-chip').forEach(btn => {
+      btn.onclick = () => {
+        document.querySelectorAll(`.filter-chip[data-filter="${btn.dataset.filter}"]`).forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        activeFilters[btn.dataset.filter] = btn.dataset.value;
+        renderGrid();
+      };
+    });
+    document.getElementById('sortSelect').onchange  = (e) => { sortMode = e.target.value; renderGrid(); };
+    document.getElementById('searchInput').oninput  = (e) => { activeFilters.search = e.target.value; renderGrid(); };
+    document.getElementById('keepFilter').onchange  = (e) => { activeFilters.keepAgain = e.target.checked; renderGrid(); };
+
+    // ---- Modal ----
+    const overlay = document.getElementById('modalOverlay');
+    const step1   = document.getElementById('step1');
+    const step2   = document.getElementById('step2');
+    let photoDataUrl = null;
+
+    function resetModal() {
+      photoDataUrl = null;
+      document.getElementById('uploadPreview').style.display = 'none';
+      document.getElementById('uploadZone').style.display = 'flex';
+      document.getElementById('nextStepBtn').disabled = true;
+      ['naam','jaar','druif','regio','land','prijs','alcohol','winkel','notities','eigen'].forEach(f => {
+        const el = document.getElementById('add-'+f);
+        if (el) el.value = '';
+      });
+      document.getElementById('add-type').value = '';
+      document.getElementById('add-keepAgain').checked = false;
+      document.getElementById('add-rating').value = '0';
+      step1.style.display = 'block';
+      step2.style.display = 'none';
+      initRatingSelector('addRating', 'add-rating');
+    }
+
+    document.getElementById('addBtn').onclick     = () => { resetModal(); overlay.classList.add('active'); };
+    document.getElementById('modalClose').onclick = () => overlay.classList.remove('active');
+    overlay.onclick = (e) => { if (e.target === overlay) overlay.classList.remove('active'); };
+
+    const photoInput = document.getElementById('photoInput');
+    const uploadZone = document.getElementById('uploadZone');
+    uploadZone.onclick    = () => photoInput.click();
+    uploadZone.ondragover = (e) => { e.preventDefault(); uploadZone.classList.add('drag-over'); };
+    uploadZone.ondragleave = () => uploadZone.classList.remove('drag-over');
+    uploadZone.ondrop = (e) => { e.preventDefault(); uploadZone.classList.remove('drag-over'); if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]); };
+    photoInput.onchange = () => { if (photoInput.files[0]) handleFile(photoInput.files[0]); };
+    document.getElementById('changePhoto').onclick = () => {
+      document.getElementById('uploadPreview').style.display = 'none';
+      uploadZone.style.display = 'flex';
+      document.getElementById('nextStepBtn').disabled = true;
+      photoDataUrl = null;
+    };
+
+    function handleFile(file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        photoDataUrl = e.target.result;
+        document.getElementById('previewImg').src = photoDataUrl;
+        uploadZone.style.display = 'none';
+        document.getElementById('uploadPreview').style.display = 'block';
+        document.getElementById('nextStepBtn').disabled = false;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    document.getElementById('nextStepBtn').onclick = () => {
+      step1.style.display = 'none';
+      step2.style.display = 'block';
+      initRatingSelector('addRating', 'add-rating');
+    };
+    document.getElementById('skipPhotoBtn').onclick = () => {
+      photoDataUrl = null;
+      step1.style.display = 'none';
+      step2.style.display = 'block';
+      initRatingSelector('addRating', 'add-rating');
+    };
+    document.getElementById('backStepBtn').onclick = () => {
+      step2.style.display = 'none';
+      step1.style.display = 'block';
+    };
+
+    // Save
+    document.getElementById('saveNewBtn').onclick = async () => {
+      const naam = document.getElementById('add-naam').value.trim();
+      if (!naam) {
+        document.getElementById('add-naam').focus();
+        document.getElementById('add-naam').style.borderColor = 'var(--burgundy-mid)';
+        return;
+      }
+      const btn = document.getElementById('saveNewBtn');
+      btn.disabled = true;
+      btn.textContent = 'Opslaan…';
+      try {
+        const id = await WijnKelder.save({
+          naam,
+          jaar:      document.getElementById('add-jaar').value || null,
+          type:      document.getElementById('add-type').value || null,
+          druif:     document.getElementById('add-druif').value || null,
+          regio:     document.getElementById('add-regio').value || null,
+          land:      document.getElementById('add-land').value || null,
+          prijs:     document.getElementById('add-prijs').value || null,
+          alcohol:   document.getElementById('add-alcohol').value || null,
+          winkel:    document.getElementById('add-winkel').value || '',
+          notities:  document.getElementById('add-notities').value || '',
+          eigen:     document.getElementById('add-eigen').value || '',
+          rating:    parseInt(document.getElementById('add-rating').value) || 0,
+          keepAgain: document.getElementById('add-keepAgain').checked,
+          photo:     photoDataUrl || ''
+        });
+        window.location.href = `wijn.html?id=${id}&new=1`;
+      } catch (err) {
+        alert('Opslaan mislukt: ' + err.message);
+        btn.disabled = false;
+        btn.textContent = 'Opslaan in kelder 🍷';
+      }
+    };
+  </script>
+</body>
+</html>
